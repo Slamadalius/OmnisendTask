@@ -34,6 +34,14 @@ func main() {
 		fmt.Printf("On %s Comment author: %s\nGave a rating of %s stars\n%s\n\n", review.Date, review.Author, review.Rating, review.Body)
 	})
 
+	// Callback function to go through pagination links
+	c.OnHTML("a.search-pagination__link", func(e *colly.HTMLElement){
+		link := e.Attr("href")
+
+		// visit the link specified
+		c.Visit(e.Request.AbsoluteURL(link))
+	})
+
 	//Logging which page is being visited
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting", r.URL.String())
