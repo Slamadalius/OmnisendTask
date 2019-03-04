@@ -5,9 +5,11 @@ import (
 	"log"
 	"net/http"
 	"encoding/json"
+	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/SlamaDalius/OmnisendTask/config"
 	"github.com/SlamaDalius/OmnisendTask/models"
@@ -17,12 +19,24 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
 	// Creating slice of struct to store all reviews
 	var allReviews []models.Review
 
+	// Getting params from query (?skip=) 
+	queryValues := r.URL.Query()
+	skip, _     := strconv.ParseInt(queryValues.Get("skip"), 10, 32)
+	limit, _    := strconv.ParseInt(queryValues.Get("limit"), 10, 32)
+
 	// Getting context and db connection from config
 	ctx := config.CTX
 	db  := config.DB
 
-	// Running Find query to fetch all reviews from review collection
-	coll, err := db.Collection("reviews").Find(ctx, bson.D{})
+	// Running Find query to fetch all reviews from review collection with options:
+	// Batch which set the number of documents to return in every batch.
+	// Limit which limits results returned (values is set from query params)
+	// Skip which specifies number of documents to skip before returning (values is set from query params)
+	coll, err := db.Collection("reviews").Find(ctx, bson.D{},
+		options.Find().SetBatchSize(20),
+		options.Find().SetLimit(limit),
+		options.Find().SetSkip(skip),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,7 +69,7 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
 	// Encoding allReviews to Json format
 	reviewsJson, err := json.Marshal(allReviews)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

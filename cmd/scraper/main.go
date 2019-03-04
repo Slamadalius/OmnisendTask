@@ -12,7 +12,6 @@ import (
 
     "github.com/gocolly/colly"
 
-	//
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
