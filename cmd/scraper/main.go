@@ -8,23 +8,16 @@ import (
 	"strings"
 
 	"github.com/SlamaDalius/OmnisendTask/config"
+	"github.com/SlamaDalius/OmnisendTask/models"
 
     "github.com/gocolly/colly"
 
-	//"go.mongodb.org/mongo-driver/bson"
+	//
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Declaring struct type for Review structure
-type Review struct {
-    Author string
-    Rating string
-    Date   string
-    Body   string
-}
 
-
-func writeToDB(ctx context.Context, db *mongo.Database, review Review) {
+func writeToDB(ctx context.Context, db *mongo.Database, review models.Review) {
 	collection := db.Collection("reviews")
 
 	res, err := collection.InsertOne(ctx, review)
@@ -47,7 +40,7 @@ func main() {
     // Creating a callback function on every div with class review-listing
     c.OnHTML("div.review-listing", func(e *colly.HTMLElement){
         // Declaring review with values from scraped reviews
-        review := Review{
+        review := models.Review{
             Author: e.ChildText("h3.review-listing-header__text"),
             Rating: e.ChildAttr("div.ui-star-rating", "data-rating"),
             //e.ChildText trims the values. In this case I am using strings package to trim space and new lines
