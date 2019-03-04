@@ -7,11 +7,12 @@ import (
     "fmt"
 	"strings"
 
+	"github.com/SlamaDalius/OmnisendTask/config"
+
     "github.com/gocolly/colly"
 
-    //"go.mongodb.org/mongo-driver/bson"
-    "go.mongodb.org/mongo-driver/mongo"
-    "go.mongodb.org/mongo-driver/mongo/options"
+	//"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Declaring struct type for Review structure
@@ -22,26 +23,9 @@ type Review struct {
     Body   string
 }
 
-func configDB(ctx context.Context) (*mongo.Database, error) {
-	// Creating new mongo client and passing connection string
-	client, err := mongo.NewClient(options.Client().ApplyURI("")) // connection string going to be added in configurations later
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = client.Connect(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	reviewsDb := client.Database("test2")
-
-	// Returning pointer to a database
-	return reviewsDb, nil
-}
 
 func writeToDB(ctx context.Context, db *mongo.Database, review Review) {
-	collection := db.Collection("reviews2")
+	collection := db.Collection("reviews")
 
 	res, err := collection.InsertOne(ctx, review)
 	if err != nil { 
@@ -52,16 +36,9 @@ func writeToDB(ctx context.Context, db *mongo.Database, review Review) {
 }
 
 func main() {
-	// The mongo.Database initialization process requires a context.Context object
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	// Calling DB connection function giving context object
-	db, err := configDB(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// getting context and db connection from config
+	ctx := config.CTX
+	db  := config.DB
 
     // Creating colly collector, here you can specify other options
     // like AllowedDomains, AllowRevisits or Async
