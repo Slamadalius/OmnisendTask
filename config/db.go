@@ -5,15 +5,30 @@ import (
 	"log"
 
 	"go.mongodb.org/mongo-driver/mongo"
-    "go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/BurntSushi/toml"
 )
 
 var DB *mongo.Database
 var CTX context.Context
 
+// Represents database server and credentials
+type DbConfig struct {
+	ConnString string
+	DbName     string
+}
+
 func configDB(ctx context.Context) (*mongo.Database, error) {
+	var config DbConfig
+
+	// Read and parse the configuration file
+	_, err := toml.DecodeFile("config.toml", &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Creating new mongo client and passing connection string
-	client, err := mongo.NewClient(options.Client().ApplyURI("")) // connection string going to be added in configurations later
+	client, err := mongo.NewClient(options.Client().ApplyURI(config.ConnString))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,7 +38,7 @@ func configDB(ctx context.Context) (*mongo.Database, error) {
 		log.Fatal(err)
 	}
 
-	reviewsDb := client.Database("test4")
+	reviewsDb := client.Database(config.DbName)
 
 	// Returning pointer to a database
 	return reviewsDb, nil
