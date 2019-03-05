@@ -21,22 +21,34 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
 
 	// Getting params from query (?skip=) 
 	queryValues := r.URL.Query()
+	batchSize := int32(20)
 	skip, _     := strconv.ParseInt(queryValues.Get("skip"), 10, 32)
 	limit, _    := strconv.ParseInt(queryValues.Get("limit"), 10, 32)
+	sortBy      := queryValues.Get("sortBy")
 
 	// Getting context and db connection from config
 	ctx := config.CTX
 	db  := config.DB
 
-	// Running Find query to fetch all reviews from review collection with options:
 	// Batch which set the number of documents to return in every batch.
 	// Limit which limits results returned (values is set from query params)
 	// Skip which specifies number of documents to skip before returning (values is set from query params)
-	coll, err := db.Collection("reviews").Find(ctx, bson.D{},
-		options.Find().SetBatchSize(20),
-		options.Find().SetLimit(limit),
-		options.Find().SetSkip(skip),
-	)
+	options := options.FindOptions{}
+	options.BatchSize = &batchSize
+	options.Limit = &limit
+	options.Skip  = &skip
+	
+	// Switch statement to sort results by rating in Ascending and Descending order
+	switch sortBy{
+	case "ratingAsc":
+		options.Sort  = bson.M{"rating": 1}
+	case "ratingDes":
+		options.Sort  = bson.M{"rating": -1}
+	default:	
+	}
+
+	// Running Find query to fetch all reviews from review collection with options:
+	coll, err := db.Collection("reviews").Find(ctx, bson.D{}, &options)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,21 +57,12 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
 	// Find returns a mongo cursor that can be used to iterate over a collections using Next()
 	for coll.Next(ctx) {
 		// Setting elem to a bson Document address
-		elem := &bson.D{}
+		var review models.Review
 		
 		// Decoding document into val
-		err = coll.Decode(elem)
+		err = coll.Decode(&review)
 		if err != nil {
 			log.Fatal(err)
-		}
-
-		m := elem.Map()
-
-		review := models.Review{
-			Author: m["author"].(string),
-			Rating: m["rating"].(string),
-			Date:   m["date"].(string),
-			Body:   m["body"].(string),
 		}
 
 		// Pushing single review to allReviews slice

@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"log"
-	//"time"
     "fmt"
 	"strings"
+	"strconv"
 
 	"github.com/SlamaDalius/OmnisendTask/config"
 	"github.com/SlamaDalius/OmnisendTask/models"
@@ -38,19 +38,30 @@ func main() {
 
     // Creating a callback function on every div with class review-listing
     c.OnHTML("div.review-listing", func(e *colly.HTMLElement){
+		author       := e.ChildText("h3.review-listing-header__text")
+		ratingString := e.ChildAttr("div.ui-star-rating", "data-rating")
+		//e.ChildText trims the values. In this case I am using strings package to trim space and new lines
+		date         := strings.Trim(e.DOM.Find("div.review-metadata__item .review-metadata__item-value").Last().Text(), " \n")
+		body         := e.ChildText("p")
+
+		ratingInt, err := strconv.Atoi(ratingString)
+		if err != nil {
+			log.Println(err)
+		}
+		rating := uint8(ratingInt)
+
         // Declaring review with values from scraped reviews
         review := models.Review{
-            Author: e.ChildText("h3.review-listing-header__text"),
-            Rating: e.ChildAttr("div.ui-star-rating", "data-rating"),
-            //e.ChildText trims the values. In this case I am using strings package to trim space and new lines
-            Date:   strings.Trim(e.DOM.Find("div.review-metadata__item .review-metadata__item-value").Last().Text(), " \n"),
-            Body:   e.ChildText("p"),
+            Author: author,
+            Rating: rating,
+            Date:   date,
+            Body:   body,
 		}
 		
 		// Writing scraped review to a database
 		writeToDB(ctx, db, review)
 
-		fmt.Printf("On %s Comment author: %s\nGave a rating of %s stars\n%s\n\n", review.Date, review.Author, review.Rating, review.Body)
+		fmt.Printf("On %s Comment author: %s\nGave a rating of %d stars\n%s\n\n", review.Date, review.Author, review.Rating, review.Body)
     })
 
     // Callback function to go through pagination links
