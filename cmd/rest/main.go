@@ -11,17 +11,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/SlamaDalius/OmnisendTask/config"
-	"github.com/SlamaDalius/OmnisendTask/models"
+	"github.com/Slamadalius/OmnisendTask/config"
+	"github.com/Slamadalius/OmnisendTask/models"
 )
 
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
 	// Creating slice of struct to store all reviews
 	var allReviews []models.Review
 
-	// Getting params from query (?skip=) 
+	// Getting params from query (skip=) (limit=) (sortBy=) 
 	queryValues := r.URL.Query()
-	batchSize := int32(20)
+	batchSize   := int32(20)
 	skip, _     := strconv.ParseInt(queryValues.Get("skip"), 10, 32)
 	limit, _    := strconv.ParseInt(queryValues.Get("limit"), 10, 32)
 	sortBy      := queryValues.Get("sortBy")

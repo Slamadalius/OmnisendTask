@@ -7,19 +7,25 @@ import (
 	"strings"
 	"strconv"
 
-	"github.com/SlamaDalius/OmnisendTask/config"
-	"github.com/SlamaDalius/OmnisendTask/models"
+	"github.com/Slamadalius/OmnisendTask/config"
+	"github.com/Slamadalius/OmnisendTask/models"
 
     "github.com/gocolly/colly"
 
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 
 func writeToDB(ctx context.Context, db *mongo.Database, review models.Review) {
 	collection := db.Collection("reviews")
 
-	res, err := collection.InsertOne(ctx, review)
+	res, err := collection.InsertOne(ctx, bson.D{
+		{"author", review.Author},
+		{"rating", review.Rating},
+		{"date", review.Date},
+		{"body", review.Body},
+	})
 	if err != nil { 
 		log.Fatal(err) 
 	}
@@ -34,7 +40,7 @@ func main() {
 
     // Creating colly collector, here you can specify other options
     // like AllowedDomains, AllowRevisits or Async
-    c := colly.NewCollector()
+	c := colly.NewCollector()
 
     // Creating a callback function on every div with class review-listing
     c.OnHTML("div.review-listing", func(e *colly.HTMLElement){
