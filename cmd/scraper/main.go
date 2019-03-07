@@ -20,17 +20,15 @@ import (
 func writeToDB(ctx context.Context, db *mongo.Database, review models.Review) {
 	collection := db.Collection("reviews")
 
-	res, err := collection.InsertOne(ctx, bson.D{
-		{"author", review.Author},
-		{"rating", review.Rating},
-		{"date", review.Date},
-		{"body", review.Body},
+	_, err := collection.InsertOne(ctx, bson.D{
+		{Key:"author", Value:review.Author},
+		{Key:"rating", Value:review.Rating},
+		{Key:"date",   Value:review.Date},
+		{Key:"body",   Value:review.Body},
 	})
 	if err != nil { 
 		log.Fatal(err) 
 	}
-
-	fmt.Println("Inserted a single review: ", res.InsertedID)
 }
 
 func main() {
@@ -39,8 +37,16 @@ func main() {
 	db  := config.DB
 
     // Creating colly collector, here you can specify other options
-    // like AllowedDomains, AllowRevisits or Async
-	c := colly.NewCollector()
+	// like AllowedDomains, AllowRevisits or Async
+	// Async turns on asynchronous network communication.
+	// if async is set to true it launch func fetch to a go routine
+	c := colly.NewCollector(
+		colly.MaxDepth(2),
+		colly.Async(true),
+	)
+
+	// Parallelism is the number of the maximum allowed concurrent requests of the matching domains
+	c.Limit(&colly.LimitRule{Parallelism: 2})
 
     // Creating a callback function on every div with class review-listing
     c.OnHTML("div.review-listing", func(e *colly.HTMLElement){
@@ -67,9 +73,10 @@ func main() {
 		// Writing scraped review to a database
 		writeToDB(ctx, db, review)
 
-		fmt.Printf("On %s Comment author: %s\nGave a rating of %d stars\n%s\n\n", review.Date, review.Author, review.Rating, review.Body)
-    })
-
+		//fmt.Printf("On %s Comment author: %s\nGave a rating of %d stars\n%s\n\n", review.Date, review.Author, review.Rating, review.Body)
+	})
+	
+	
     // Callback function to go through pagination links
     c.OnHTML("a.search-pagination__link", func(e *colly.HTMLElement){
         link := e.Attr("href")
@@ -81,7 +88,12 @@ func main() {
     //Logging which page is being visited
     c.OnRequest(func(r *colly.Request) {
         fmt.Println("Visiting", r.URL.String())
-    })
+	})
 
-    c.Visit("https://apps.shopify.com/omnisend/reviews")
+	c.Visit("https://apps.shopify.com/omnisend/reviews")
+	
+	// Returns when the jobs are finished
+	c.Wait()
+
+	fmt.Println("Finished")
 }
