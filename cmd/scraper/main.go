@@ -20,6 +20,7 @@ import (
 func writeToDB(ctx context.Context, db *mongo.Database, review models.Review) {
 	collection := db.Collection("reviews")
 
+	// Inserting reviews
 	_, err := collection.InsertOne(ctx, bson.D{
 		{Key:"author", Value:review.Author},
 		{Key:"rating", Value:review.Rating},

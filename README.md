@@ -88,5 +88,5 @@ localhost:8080?sortBy=ratingDes&skip=15&limit=10
 
 ## TODO for the future
 
-Learn more about testing with go. Set up a check if the user inserts wrong params and show a message. Create a scraper withouth using third party package. Learn more about MongoDB. Implement more sort options and filters. Deepen knowledge about types (It's all about the types). And more...
+Learn more about testing with go. Set up a check if the user inserts wrong params and show a message. Create a scraper withouth using third party package. Insert reviews to a database not one by one but in batches. Learn more about MongoDB. Implement more sort options and filters. Deepen knowledge about types (It's all about the types). And more...
 
