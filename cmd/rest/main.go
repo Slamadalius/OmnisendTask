@@ -21,7 +21,7 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
 
 	// Getting params from query (skip=) (limit=) (sortBy=) 
 	queryValues := r.URL.Query()
-	batchSize   := int32(20)
+	batchSize   := int32(30)
 	skip, _     := strconv.ParseInt(queryValues.Get("skip"), 10, 32)
 	limit, _    := strconv.ParseInt(queryValues.Get("limit"), 10, 32)
 	sortBy      := queryValues.Get("sortBy")
